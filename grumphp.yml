@@ -1,0 +1,19 @@
+parameters:
+    git_dir: .
+    bin_dir: ./vendor/bin
+    fixer:
+        enabled: true
+        fix_by_default: false
+
+    tasks:
+        phpstan:
+            configuration: phpstan.neon
+            triggered_by: ['php']
+        phpcsfixer:
+            config: .php-cs-fixer.php
+            triggered_by: ['php']
+            allow_risky: true
+            using_cache: false
+            verbose: true
+        composer:
+            file: composer.json

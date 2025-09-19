@@ -1,5 +1,4 @@
 localhost {
     root * /app/public
     php_server
-    tls /app/certs/localhost.pem /app/certs/localhost-key.pem
 }

@@ -16,5 +16,18 @@ services:
     App\:
         resource: '../src/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Notification\Domain\Service\Provider\Implementation\LogNotifier:
+      tags: [ 'notification.provider' ]
+
+    App\Notification\Domain\Service\Provider\Implementation\EmailNotifier:
+      tags: [ 'notification.provider' ]
+
+    App\Notification\Domain\Service\Provider\Implementation\SMSNotifier:
+      tags: [ 'notification.provider' ]
+
+    App\Notification\Infrastructure\Serializer\ChannelRequestNormalizer:
+      tags: [ 'serializer.normalizer' ]
+
+    App\Notification\Application\Factory\NotificationFactory:
+      bind:
+        $enabledChannels: '%app.notification.enabled_channels%'

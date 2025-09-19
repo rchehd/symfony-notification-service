@@ -1,0 +1,7 @@
+parameters:
+  # Channel list for notifications.
+  # To disable or enable a channel, set true or false.
+  app.notification.enabled_channels:
+    email: true
+    sms: true
+    log: true

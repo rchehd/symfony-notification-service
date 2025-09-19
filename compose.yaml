@@ -15,20 +15,41 @@ services:
     environment:
       APP_ENV: ${APP_ENV}
       APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: "pgsql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
-      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
-      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-      KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL}
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
-      #            SERVER_NAME: "localhost"
+      DATABASE_URL: ${DATABASE_URL}
       XDEBUG_MODE: "off"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
       - database
 
+  worker:
+    build:
+      context: .
+      dockerfile: docker/frankenphp/Dockerfile
+      args:
+        XDEBUG: "0"
+    container_name: "${PROJECT_NAME}_worker"
+    depends_on:
+      - frankenphp
+      - database
+    volumes:
+      - ./:/app
+    environment:
+      APP_ENV: ${APP_ENV}
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      XDEBUG_MODE: "off"
+    command: php bin/console messenger:consume async -vv
+  mailpit:
+    image: axllent/mailpit
+    container_name: "${PROJECT_NAME}_mailpit"
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   database:
     image: postgres:${POSTGRES_VERSION:-16}-alpine
+    container_name: ${PROJECT_NAME}_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
