@@ -1,0 +1,8 @@
+services:
+  frankenphp:
+    environment:
+      XDEBUG_MODE: 'debug'
+  database:
+    ports:
+      - "5432"
+
