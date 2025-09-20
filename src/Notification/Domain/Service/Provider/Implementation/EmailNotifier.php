@@ -27,6 +27,8 @@ class EmailNotifier implements NotifierInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
      */
     public function send(NotificationInterface $notification): void
     {

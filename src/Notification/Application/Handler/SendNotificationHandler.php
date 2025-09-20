@@ -2,8 +2,10 @@
 
 namespace App\Notification\Application\Handler;
 
+use App\Notification\Application\Event\NotificationSentEvent;
 use App\Notification\Application\Notification\NotificationInterface;
 use App\Notification\Domain\Service\Provider\NotifierInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
@@ -28,6 +30,7 @@ class SendNotificationHandler
         #[TaggedIterator('notification.provider')] private readonly iterable $providers,
         private readonly LoggerInterface $logger,
         #[Autowire(service: 'limiter.notification_limiter')] private readonly RateLimiterFactory $notificationLimiter,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -62,7 +65,14 @@ class SendNotificationHandler
                     $provider->send($notification);
                     // Set true if it is sent.
                     $isSent = true;
-                    $this->logger->info(sprintf('Notification sent successfully via %s.', get_class($provider)));
+
+                    $event = new NotificationSentEvent(
+                        $identifier,
+                        $channel->value,
+                        get_class($provider)
+                    );
+
+                    $this->eventDispatcher->dispatch($event);
                     // Break if the current provider works, otherwise - go to next.
                     break;
                 } catch (\Throwable $exception) {
