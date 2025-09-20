@@ -5,6 +5,7 @@ namespace App\Notification\Application\Handler;
 use App\Notification\Application\Notification\NotificationInterface;
 use App\Notification\Domain\Service\Provider\NotifierInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\RateLimiter\Exception\RateLimitExceededException;
@@ -26,7 +27,7 @@ class SendNotificationHandler
     public function __construct(
         #[TaggedIterator('notification.provider')] private readonly iterable $providers,
         private readonly LoggerInterface $logger,
-        private readonly RateLimiterFactory $notificationLimiter,
+        #[Autowire(service: 'limiter.notification_limiter')] private readonly RateLimiterFactory $notificationLimiter,
     ) {
     }
 
