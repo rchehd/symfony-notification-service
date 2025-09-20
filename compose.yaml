@@ -20,7 +20,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - database
+      - postgres
 
   worker:
     build:
@@ -31,7 +31,7 @@ services:
     container_name: "${PROJECT_NAME}_worker"
     depends_on:
       - frankenphp
-      - database
+      - postgres
     volumes:
       - ./:/app
     environment:
@@ -40,6 +40,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       XDEBUG_MODE: "off"
     command: php bin/console messenger:consume async -vv
+
   mailpit:
     image: axllent/mailpit
     container_name: "${PROJECT_NAME}_mailpit"
@@ -47,7 +48,7 @@ services:
       - "1025:1025"
       - "8025:8025"
 
-  database:
+  postgres:
     image: postgres:${POSTGRES_VERSION:-16}-alpine
     container_name: ${PROJECT_NAME}_postgres
     environment:
@@ -60,7 +61,7 @@ services:
       retries: 5
       start_period: 60s
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
+      - postgres_data:/var/lib/postgresql/data:rw
 
 volumes:
-  database_data:
+  postgres_data:

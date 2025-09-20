@@ -2,7 +2,7 @@ services:
   frankenphp:
     environment:
       XDEBUG_MODE: 'debug'
-  database:
+  postgres:
     ports:
       - "5432"
 

@@ -25,9 +25,15 @@ class RecipientFactory
     public function create(RecipientDTO $recipientDTO, NotificationChannel $channel): RecipientInterface
     {
         return match ($channel) {
-            NotificationChannel::EMAIL => new EmailRecipient($recipientDTO->email),
-            NotificationChannel::SMS   => new SmsRecipient($recipientDTO->phoneNumber),
-            NotificationChannel::LOG   => new LogRecipient($recipientDTO->username),
+            NotificationChannel::EMAIL => new EmailRecipient(
+                $recipientDTO->email ?? throw new \InvalidArgumentException('Field "email" is required for the "email" channel.')
+            ),
+            NotificationChannel::SMS => new SmsRecipient(
+                $recipientDTO->phoneNumber ?? throw new \InvalidArgumentException('Field "phoneNumber" is required for the "sms" channel.')
+            ),
+            NotificationChannel::LOG => new LogRecipient(
+                $recipientDTO->username ?? throw new \InvalidArgumentException('Field "username" is required for the "log" channel.')
+            ),
         };
     }
 }

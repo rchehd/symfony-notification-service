@@ -7,13 +7,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 class RecipientDTO
 {
     #[Assert\Email]
-    #[Assert\NotNull]
-    public ?string $email;
+    public ?string $email = null;
 
     #[Assert\Regex('/^\+[1-9]\d{1,14}$/')]
-    #[Assert\NotNull]
-    public ?string $phoneNumber;
+    public ?string $phoneNumber = null;
 
-    #[Assert\NotNull]
-    public ?string $username;
+    public ?string $username = null;
 }

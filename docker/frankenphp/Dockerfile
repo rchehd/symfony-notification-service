@@ -34,11 +34,7 @@ RUN if [ "$XDEBUG" = "1" ]; then \
     fi
 
 # Install dependencies via Composer.
-RUN composer install --no-interaction --optimize-autoloader
-
-# Clear Symfony cache.
-RUN php bin/console cache:clear
-RUN php bin/console cache:warmup
+RUN composer install --no-interaction --optimize-autoloader --no-scripts
 
 RUN mkdir -p var/log
 
