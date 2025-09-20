@@ -17,13 +17,16 @@ services:
         resource: '../src/'
 
     App\Notification\Domain\Service\Provider\Implementation\LogNotifier:
-      tags: [ 'notification.provider' ]
+      tags:
+        - { name: 'notification.provider', priority: 100 }
 
     App\Notification\Domain\Service\Provider\Implementation\EmailNotifier:
-      tags: [ 'notification.provider' ]
+      tags:
+        - { name: 'notification.provider', priority: 100 }
 
     App\Notification\Domain\Service\Provider\Implementation\SMSNotifier:
-      tags: [ 'notification.provider' ]
+      tags:
+        - { name: 'notification.provider', priority: 100 }
 
     App\Notification\Infrastructure\Serializer\ChannelRequestNormalizer:
       tags: [ 'serializer.normalizer' ]
