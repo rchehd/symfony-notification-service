@@ -7,6 +7,8 @@ use App\Notification\Domain\Service\Provider\NotifierInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\RateLimiter\Exception\RateLimitExceededException;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
  * Class responsible for handling notification sending logic.
@@ -24,6 +26,7 @@ class SendNotificationHandler
     public function __construct(
         #[TaggedIterator('notification.provider')] private readonly iterable $providers,
         private readonly LoggerInterface $logger,
+        private readonly RateLimiterFactory $notificationLimiter,
     ) {
     }
 
@@ -34,6 +37,18 @@ class SendNotificationHandler
         $recipient  = $notification->getRecipient();
         $channel    = $recipient->getChannel();
         $identifier = $recipient->getIdentifier();
+
+        try {
+            // Create a limiter for a recipient by their identifier.
+            $limiter = $this->notificationLimiter->create($identifier);
+            // If the limit is exceeded, this method will throw an exception.
+            $limiter->consume()->ensureAccepted();
+        } catch (RateLimitExceededException $exception) {
+            // If the limit is exceeded, log it and throw an exception so
+            // Messenger can try to process the message later.
+            $this->logger->warning(sprintf('Rate limit exceeded for user %s. Retrying in %d seconds.', $identifier, $exception->getRetryAfter()->getTimestamp() - time()));
+            throw $exception;
+        }
 
         $this->logger->info(sprintf('Processing notification for %s via %s channel.', $identifier, $channel->value));
 

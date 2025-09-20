@@ -1,0 +1,9 @@
+framework:
+  rate_limiter:
+    notification_limiter:
+      # "X requests by Y time"
+      policy: 'sliding_window'
+      # Limit
+      limit: 300
+      # Interval
+      interval: '1 hour'
