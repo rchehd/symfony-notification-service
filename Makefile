@@ -1,4 +1,4 @@
-.PHONY: up cc rebuild down stop logs ssh
+.PHONY: up cc rebuild down stop logs ssh 'run tests'
 
 up:
 	docker compose up -d
@@ -26,3 +26,6 @@ logs:
 
 ssh:
 	docker compose exec frankenphp bash
+
+run tests:
+	docker compose exec frankenphp env APP_ENV=test php bin/phpunit tests/

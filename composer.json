@@ -95,9 +95,14 @@
         "phpro/grumphp": "^2.15",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-doctrine": "^2.0",
+        "phpunit/phpunit": "^11.5",
         "roave/security-advisories": "dev-latest",
+        "symfony/browser-kit": "7.3.*",
+        "symfony/css-selector": "7.3.*",
         "symfony/debug-bundle": "7.3.*",
+        "symfony/http-client": "7.3.*",
         "symfony/maker-bundle": "^1.64",
-        "symfony/stopwatch": "7.3.*"
+        "symfony/stopwatch": "7.3.*",
+        "zenstruck/messenger-test": "^1.11"
     }
 }

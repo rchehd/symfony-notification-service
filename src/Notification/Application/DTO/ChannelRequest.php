@@ -18,5 +18,6 @@ class ChannelRequest
     public NotificationChannel $channel;
 
     #[Assert\Valid]
+    #[Assert\NotNull(message: 'Field "payload" is required.')]
     public NotificationPayloadInterface $payload;
 }
