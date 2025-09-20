@@ -1,4 +1,4 @@
-.PHONY: up cc rebuild down stop logs ssh 'run tests'
+.PHONY: up cc rebuild down stop logs ssh 'run tests' 'worker logs'
 
 up:
 	docker compose up -d
@@ -23,6 +23,9 @@ stop:
 
 logs:
 	docker compose logs -f
+
+worker logs:
+	docker compose logs -f worker
 
 ssh:
 	docker compose exec frankenphp bash

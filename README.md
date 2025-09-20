@@ -81,8 +81,8 @@ This command will:
 
 ### Access Points
 
-- **Application**: https://localhost
-- **API Documentation (Swagger UI)**: https://localhost/api/docs
+- **Application**: http://localhost
+- **API Documentation (Swagger UI)**: http://localhost/api/docs
 - **Mailpit Web UI**: http://localhost:8025
 
 ## 🛠️ Usage / API Endpoints
@@ -138,6 +138,54 @@ This endpoint retrieves a paginated list of all successfully sent notifications.
 - **Endpoint**: `GET /api/notification_logs`
 - **Success Response**: `200 OK`
 
+## ⚙️ Configuration
+
+### How to Enable or Disable Notification Channels
+
+You can easily control which notification channels are active in the application without touching any PHP code.
+
+1. Open the configuration file: `config/packages/app_notification.yaml`
+2. To disable a channel, simply change its value from `true` to `false`
+
+```yaml
+# config/packages/app_notification.yaml
+parameters:
+    # Channel list for notifications.
+    # To disable or enable a channel, set true or false.
+    app.notification.enabled_channels:
+        email: true
+        sms: true
+        log: true
+        push: false # This channel is currently disabled
+```
+
+The application will automatically ignore any requests for disabled channels.
+
+### Configuring Provider Failover Priority
+
+You can define multiple providers for the same channel and set their priority to control the failover order.
+
+1. Open the services configuration file: `config/services.yaml`
+2. Add the `priority` key to the `notification.provider` tag for your services. **The higher the number, the higher the priority.**
+
+In the example below, `TwilioSmsNotifier` will always be tried first. `VonageSmsNotifier` will only be used if Twilio fails.
+
+```yaml
+# config/services.yaml
+services:
+    # ...
+
+    # Primary SMS Provider
+    App\Notification\Domain\Service\Provider\Implementation\TwilioSmsNotifier:
+        tags:
+            - { name: 'notification.provider', priority: 100 }
+
+    # Fallback SMS Provider
+    App\Notification\Domain\Service\Provider\Implementation\VonageSmsNotifier:
+        tags:
+            - { name: 'notification.provider', priority: 50 }
+```
+
 #### Example JSON Response Body
 
 ```json
@@ -184,3 +232,117 @@ The Makefile provides several useful commands for development:
 - `make logs`: Follow the logs of all running containers
 - `make ssh`: Open a bash shell inside the frankenphp container
 - `make 'run tests'`: Run the PHPUnit test suite
+- `make 'worker logs'`: Check watcher logs
+
+## How to Add a New Notification Provider
+
+The service is designed to be easily extendable. To add a new provider (e.g., for Push notifications), follow these steps:
+
+#### 1. Update the Enum
+
+Add a new case for your channel in `src/Notification/Domain/Enum/NotificationChannel.php`.
+
+```php
+enum NotificationChannel: string
+{
+    // ...
+    case PUSH = 'push';
+}
+```
+
+#### 2. Create a Payload DTO
+
+Create a new DTO class for the `payload` in `src/Notification/Application/DTO/Payload/Implementation/`. This class defines the data structure your API will expect for this channel.
+
+```php
+<?php
+namespace App\Notification\Application\DTO\Payload\Implementation;
+
+use App\Notification\Application\DTO\Payload\NotificationPayloadInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+
+class PushPayload implements NotificationPayloadInterface
+{
+    #[Assert\NotBlank]
+    public string $title;
+
+    #[Assert\NotBlank]
+    public string $body;
+}
+```
+
+#### 3. Create Value Objects (Recipient & Content)
+
+Create specific, validated Value Objects for the recipient's identifier and the message content in `src/Notification/Domain/ValueObject/Implementation/`.
+
+**Recipient**:
+```php
+// src/Notification/Domain/ValueObject/Implementation/PushRecipient.php
+class PushRecipient implements RecipientInterface { /* ... */ }
+```
+
+**Content**:
+```php
+// src/Notification/Domain/ValueObject/Implementation/PushContent.php
+class PushContent implements MessageContentInterface { /* ... */ }
+```
+
+#### 4. Create a Notification Command Class
+
+Create a new notification class in `src/Notification/Application/Notification/Implementation/` that ties the new Recipient and Content objects together.
+
+```php
+<?php
+namespace App\Notification\Application\Notification\Implementation;
+
+class PushNotification implements NotificationInterface { /* ... */ }
+```
+
+#### 5. Update the Factories
+
+Teach your factories how to create the new objects.
+
+**RecipientFactory**: Update the `create` method in `RecipientFactory.php` to handle the new channel and create the appropriate `Recipient` object (e.g., `PushRecipient`). You may also need to add a new field to `RecipientDTO.php` (e.g., `pushToken`).
+
+**NotificationFactory**: Update the `createFromRequest` method in `NotificationFactory.php` to handle the new `Payload` and create the `Notification` command object (e.g., `PushNotification`).
+
+#### 6. Create the Provider Class
+
+Create the new provider class in `src/Notification/Domain/Service/Provider/Implementation/`. This class must implement `NotifierInterface`.
+
+```php
+<?php
+namespace App\Notification\Domain\Service\Provider\Implementation;
+
+use App\Notification\Application\Notification\NotificationInterface;
+use App\Notification\Domain\Enum\NotificationChannel;
+use App\Notification\Domain\Service\Provider\NotifierInterface;
+
+class MyNewPushNotifier implements NotifierInterface
+{
+    public function send(NotificationInterface $notification): void
+    {
+        // Add logic to send notification via the new service API
+    }
+
+    public function supports(NotificationChannel $channel): bool
+    {
+        return $channel === NotificationChannel::PUSH;
+    }
+}
+```
+
+#### 7. Register the Service
+
+Finally, open `config/services.yaml` and register your new provider with the `notification.provider` tag.
+
+```yaml
+# config/services.yaml
+services:
+    # ...
+    App\Notification\Domain\Service\Provider\Implementation\MyNewPushNotifier:
+        tags:
+            - { name: 'notification.provider', priority: 100 }
+```
+
+That's it! The `SendNotificationHandler` will automatically pick up your new provider.
