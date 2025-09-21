@@ -37,6 +37,3 @@ RUN if [ "$XDEBUG" = "1" ]; then \
 RUN composer install --no-interaction --optimize-autoloader --no-scripts
 
 RUN mkdir -p var/log
-
-# Grant access for frankenphp user.
-RUN chmod -R 777 var/cache var/log

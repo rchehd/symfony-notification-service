@@ -60,7 +60,7 @@ cd symfony-notification-service
 Create a local environment file by copying the example:
 
 ```bash
-cp .env .env.example
+cp .env.example .env
 ```
 
 The default values in `.env` need to be set by yourself.

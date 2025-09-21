@@ -22,27 +22,6 @@ services:
     depends_on:
       - postgres
 
-  worker:
-    build:
-      context: .
-      dockerfile: docker/frankenphp/Dockerfile
-      args:
-        XDEBUG: "0"
-    container_name: "${PROJECT_NAME}_worker"
-    depends_on:
-      frankenphp:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./:/app
-    environment:
-      APP_ENV: ${APP_ENV}
-      APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: ${DATABASE_URL}
-      XDEBUG_MODE: "off"
-    command: php bin/console messenger:consume async -vv
-
   mailpit:
     image: axllent/mailpit
     container_name: "${PROJECT_NAME}_mailpit"
@@ -64,6 +43,27 @@ services:
       start_period: 60s
     volumes:
       - postgres_data:/var/lib/postgresql/data:rw
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/frankenphp/Dockerfile
+      args:
+        XDEBUG: "0"
+    container_name: "${PROJECT_NAME}_worker"
+    depends_on:
+      frankenphp:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+    environment:
+      APP_ENV: ${APP_ENV}
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      XDEBUG_MODE: "off"
+    command: php bin/console messenger:consume async -vv
 
 volumes:
   postgres_data:
