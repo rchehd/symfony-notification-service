@@ -63,7 +63,7 @@ Create a local environment file by copying the example:
 cp .env.example .env
 ```
 
-The default values in `.env` need to be set by yourself.
+The default values in `.env` are pre-configured to work with the Docker setup. No changes are needed to get started.
 
 #### 3. Build and Run the Application
 

@@ -1,9 +1,11 @@
 .PHONY: up cc rebuild down stop logs ssh 'run tests' 'worker logs'
 
 up:
-	docker compose up -d
+	docker compose up -d frankenphp postgres mailpit
 	docker compose exec frankenphp composer install
 	docker compose exec frankenphp php bin/console doctrine:migrations:migrate --no-interaction
+	docker compose exec frankenphp php bin/console cache:clear
+	docker compose up -d worker
 	docker compose exec frankenphp php bin/console cache:clear
 
 cc:
