@@ -146,6 +146,12 @@ This endpoint retrieves a paginated list of all successfully sent notifications.
 - **Endpoint**: `GET /api/notification_logs`
 - **Success Response**: `200 OK`
 
+### 3. View Worker Logs
+
+```bash
+make worker logs
+```
+
 ## ⚙️ Configuration
 
 ### How to Enable or Disable Notification Channels
