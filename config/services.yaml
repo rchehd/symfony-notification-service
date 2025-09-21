@@ -22,16 +22,20 @@ services:
         - '%app.notification.providers%'
 
     App\Notification\Domain\Service\Provider\Implementation\LogNotifier:
-      tags:
-        - { name: 'notification.provider' }
+      tags: [ 'notification.provider' ]
 
     App\Notification\Domain\Service\Provider\Implementation\EmailNotifier:
-      tags:
-        - { name: 'notification.provider' }
+      tags: [ 'notification.provider' ]
 
     App\Notification\Domain\Service\Provider\Implementation\SMSNotifier:
-      tags:
-        - { name: 'notification.provider' }
+      tags: [ 'notification.provider' ]
+
+    App\Notification\Domain\Service\Provider\Implementation\TwilioSmsNotifier:
+      arguments:
+        $accountSid: '%env(TWILIO_ACCOUNT_SID)%'
+        $authToken: '%env(TWILIO_AUTH_TOKEN)%'
+        $messageServiceId: '%env(TWILIO_MESSAGING_SERVICE_SID)%'
+      tags: [ 'notification.provider' ]
 
     App\Notification\Infrastructure\Serializer\ChannelRequestNormalizer:
       tags: [ 'serializer.normalizer' ]
