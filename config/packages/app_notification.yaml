@@ -1,7 +1,10 @@
 parameters:
   # Channel list for notifications.
   # To disable or enable a channel, set true or false.
-  app.notification.enabled_channels:
-    email: true
-    sms: true
-    log: true
+  app.notification.providers:
+      email:
+          symfony_mailer: { enabled: true, priority: 100, class: App\Notification\Domain\Service\Provider\Implementation\EmailNotifier }
+      sms:
+          dummy_sms: { enabled: true, priority: 100, class: App\Notification\Domain\Service\Provider\Implementation\SMSNotifier }
+      log:
+          main_log: { enabled: true, priority: 100, class: App\Notification\Domain\Service\Provider\Implementation\LogNotifier }

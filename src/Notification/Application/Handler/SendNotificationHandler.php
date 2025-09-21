@@ -5,10 +5,10 @@ namespace App\Notification\Application\Handler;
 use App\Notification\Application\Event\NotificationSentEvent;
 use App\Notification\Application\Notification\NotificationInterface;
 use App\Notification\Domain\Service\Provider\NotifierInterface;
+use App\Notification\Domain\Service\ProviderChain;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\RateLimiter\Exception\RateLimitExceededException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
@@ -23,11 +23,8 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 #[AsMessageHandler]
 class SendNotificationHandler
 {
-    /**
-     * @param iterable<NotifierInterface> $providers
-     */
     public function __construct(
-        #[AutowireIterator('notification.provider')] private readonly iterable $providers,
+        private readonly ProviderChain $providerChain,
         private readonly LoggerInterface $logger,
         #[Autowire(service: 'limiter.notification_limiter')] private readonly RateLimiterFactory $notificationLimiter,
         private readonly EventDispatcherInterface $eventDispatcher,
@@ -57,33 +54,30 @@ class SendNotificationHandler
         $this->logger->info(sprintf('Processing notification for %s via %s channel.', $identifier, $channel->value));
 
         /** @var NotifierInterface $provider */
-        foreach ($this->providers as $provider) {
-            // Check if provider supports channel.
-            if ($provider->supports($channel)) {
-                try {
-                    // Try to send it.
-                    $provider->send($notification);
-                    // Set true if it is sent.
-                    $isSent = true;
+        foreach ($this->providerChain->getProvider($channel) as $provider) {
+            try {
+                // Try to send it.
+                $provider->send($notification);
+                // Set true if it is sent.
+                $isSent = true;
 
-                    $event = new NotificationSentEvent(
-                        $identifier,
-                        $channel->value,
-                        get_class($provider)
-                    );
+                $event = new NotificationSentEvent(
+                    $identifier,
+                    $channel->value,
+                    get_class($provider)
+                );
 
-                    $this->eventDispatcher->dispatch($event);
-                    // Break if the current provider works, otherwise - go to next.
-                    break;
-                } catch (\Throwable $exception) {
-                    $this->logger->error(sprintf(
-                        'Failed to send notification via %s. Error: %s',
-                        get_class($provider),
-                        $exception->getMessage()
-                    ));
-                    // Continue the circle to try another provider.
-                    continue;
-                }
+                $this->eventDispatcher->dispatch($event);
+                // Break if the current provider works, otherwise - go to next.
+                break;
+            } catch (\Throwable $exception) {
+                $this->logger->error(sprintf(
+                    'Failed to send notification via %s. Error: %s',
+                    get_class($provider),
+                    $exception->getMessage()
+                ));
+                // Continue the circle to try another provider.
+                continue;
             }
         }
 

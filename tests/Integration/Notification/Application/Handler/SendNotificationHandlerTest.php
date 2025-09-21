@@ -5,7 +5,9 @@ namespace App\Tests\Integration\Notification\Application\Handler;
 use App\Notification\Application\Event\NotificationSentEvent;
 use App\Notification\Application\Handler\SendNotificationHandler;
 use App\Notification\Application\Notification\Implementation\SMSNotification;
+use App\Notification\Domain\Enum\NotificationChannel;
 use App\Notification\Domain\Service\Provider\NotifierInterface;
+use App\Notification\Domain\Service\ProviderChain;
 use App\Notification\Domain\ValueObject\Implementation\SmsContent;
 use App\Notification\Domain\ValueObject\Implementation\SmsRecipient;
 use PHPUnit\Framework\TestCase;
@@ -62,6 +64,11 @@ class SendNotificationHandlerTest extends TestCase
         // The second provider also supports SMS and always works successfully.
         $successfulProvider->method('supports')->willReturn(true);
         // The Send method does nothing, just successfully work out.
+        $providerChainMock = $this->createMock(ProviderChain::class);
+        $providerChainMock->method('getProvider')
+            ->with(NotificationChannel::SMS)
+            ->willReturn([$failingProvider, $successfulProvider]);
+
 
         // 3. We create mooks for other addictions.
         $logger          = $this->createMock(LoggerInterface::class);
@@ -78,7 +85,7 @@ class SendNotificationHandlerTest extends TestCase
         // 4. We create our handler by handing it to our mooks.
         // We pass the providers in the order we want to check them.
         $handler = new SendNotificationHandler(
-            [$failingProvider, $successfulProvider],
+            $providerChainMock,
             $logger,
             $limiterFactory,
             $eventDispatcher

@@ -30,8 +30,10 @@ services:
         XDEBUG: "0"
     container_name: "${PROJECT_NAME}_worker"
     depends_on:
-      - frankenphp
-      - postgres
+      frankenphp:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     volumes:
       - ./:/app
     environment:

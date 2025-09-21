@@ -16,21 +16,26 @@ services:
     App\:
         resource: '../src/'
 
+    App\Notification\Domain\Service\ProviderChain:
+      arguments:
+        - !tagged_iterator notification.provider
+        - '%app.notification.providers%'
+
     App\Notification\Domain\Service\Provider\Implementation\LogNotifier:
       tags:
-        - { name: 'notification.provider', priority: 100 }
+        - { name: 'notification.provider' }
 
     App\Notification\Domain\Service\Provider\Implementation\EmailNotifier:
       tags:
-        - { name: 'notification.provider', priority: 100 }
+        - { name: 'notification.provider' }
 
     App\Notification\Domain\Service\Provider\Implementation\SMSNotifier:
       tags:
-        - { name: 'notification.provider', priority: 100 }
+        - { name: 'notification.provider' }
 
     App\Notification\Infrastructure\Serializer\ChannelRequestNormalizer:
       tags: [ 'serializer.normalizer' ]
 
     App\Notification\Application\Factory\NotificationFactory:
       bind:
-        $enabledChannels: '%app.notification.enabled_channels%'
+        $enabledChannels: '%app.notification.providers%'
