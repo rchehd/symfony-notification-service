@@ -65,6 +65,14 @@ cp .env.example .env
 
 The default values in `.env` are pre-configured to work with the Docker setup. No changes are needed to get started.
 
+If you want to add Twilio credentials—you need to execute `make rebuild`.
+
+```dotenv
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_MESSAGING_SERVICE_SID=
+```
+
 #### 3. Build and Run the Application
 
 The provided Makefile automates the entire setup process. Simply run:
